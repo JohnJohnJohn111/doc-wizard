@@ -326,6 +326,20 @@ function renderQuestion() {
     inputHtml = `<textarea id="mainInput" placeholder="${q.placeholder || ''}" oninput="answers['${q.field}']=this.value">${answers[q.field] || ''}</textarea>`;
   } else {
     inputHtml = `<input type="text" id="mainInput" placeholder="${q.placeholder || ''}" value="${answers[q.field] || ''}" oninput="answers['${q.field}']=this.value" onkeydown="if(event.key==='Enter')nextQ()">`;
+    if (q.id === 'q1') {
+      inputHtml += `
+        <button type="button" id="controlNameBtn" onclick="controlName()" style="margin-top:12px; padding:9px 20px; background:var(--navy); color:white; border:none; border-radius:4px; font-family:'Inter',sans-serif; font-size:0.85rem; font-weight:500; letter-spacing:0.03em; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:background 0.2s;">
+          <span>🔍</span> Control Name
+        </button>
+        <div id="nameControlPanel" style="display:none; margin-top:16px; border:1px solid var(--border); border-radius:6px; overflow:hidden; font-family:'Inter',sans-serif;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 16px; background:var(--navy-light); border-bottom:1px solid var(--border);">
+            <span style="font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--navy);">Name Control — allabolag.se</span>
+            <a id="nameControlLink" href="#" target="_blank" style="font-size:0.75rem; color:var(--navy-mid); text-decoration:none;">View full search ↗</a>
+          </div>
+          <div id="nameControlOverall" style="padding:11px 16px; font-size:0.87rem; font-weight:600; border-bottom:1px solid var(--border);"></div>
+          <div id="nameControlList" style="padding:8px 16px 4px;"></div>
+        </div>`;
+    }
   }
 
   // Build context panel
@@ -479,6 +493,63 @@ async function generateDoc() {
     document.getElementById('successCard').innerHTML = `
       <div class="error-msg" style="text-align:left">Error: ${err.message}</div>
       <button class="btn-ghost" style="margin-top:20px" onclick="location.reload()">Start over</button>`;
+  }
+}
+
+async function controlName() {
+  const inp = document.getElementById('mainInput');
+  const companyName = inp ? inp.value.trim() : '';
+  if (!companyName) { alert('Please enter a company name first.'); return; }
+
+  const btn = document.getElementById('controlNameBtn');
+  btn.innerHTML = '<span>⏳</span> Searching…';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  try {
+    const res = await fetch('/api/control-name', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_name: companyName })
+    });
+    const data = await res.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+
+    document.getElementById('nameControlPanel').style.display = 'block';
+    if (data.searchUrl) document.getElementById('nameControlLink').href = data.searchUrl;
+
+    const overallEl = document.getElementById('nameControlOverall');
+    const palette = {
+      high:   { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
+      medium: { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' },
+      low:    { bg: '#DCFCE7', color: '#166534', border: '#86EFAC' }
+    };
+    const c = palette[data.overallLevel] || palette.low;
+    overallEl.style.cssText = `background:${c.bg}; color:${c.color}; border-bottom:1px solid ${c.border}; padding:11px 16px; font-size:0.87rem; font-weight:600;`;
+    overallEl.textContent = data.overall;
+
+    const listEl = document.getElementById('nameControlList');
+    if (!data.results || data.results.length === 0) {
+      listEl.innerHTML = '<p style="color:#888; font-size:0.82rem; padding:8px 0;">No similar companies found.</p>';
+    } else {
+      const rp = { high: { bg:'#FEE2E2', color:'#DC2626' }, medium: { bg:'#FEF3C7', color:'#D97706' }, low: { bg:'#DCFCE7', color:'#16A34A' } };
+      listEl.innerHTML = data.results.map(r => {
+        const rc = rp[r.risk] || rp.low;
+        return `<div style="display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid #F0EDE6;">
+          <a href="${r.url}" target="_blank" style="color:var(--navy-mid); font-size:0.84rem; text-decoration:none; flex:1; margin-right:12px;">${r.name}</a>
+          <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+            <span style="font-size:0.75rem; color:#888;">${r.similarity}% match</span>
+            <span style="padding:2px 9px; border-radius:10px; font-size:0.7rem; font-weight:700; background:${rc.bg}; color:${rc.color};">${r.risk.toUpperCase()}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } catch (e) {
+    alert('Request failed: ' + e.message);
+  } finally {
+    btn.innerHTML = '<span>🔍</span> Control Name';
+    btn.disabled = false;
+    btn.style.opacity = '1';
   }
 }
 
