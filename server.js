@@ -10,139 +10,185 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('public'));
 
-// ---------- helpers for /api/control-name ----------
+// ─────────────────────────────────────────────
+//  Helpers
+// ─────────────────────────────────────────────
 
 function stripSuffix(name) {
-  return name.replace(/\b(AB|HB|KB|EF|HANDELSBOLAG|AKTIEBOLAG|KOMMANDITBOLAG|ENSKILD\s+FIRMA)\b/gi, '').replace(/\s+/g, ' ').trim();
+  return name
+    .replace(/\b(AB|HB|KB|EF|HANDELSBOLAG|AKTIEBOLAG|KOMMANDITBOLAG|ENSKILD\s+FIRMA)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function levenshteinSimilarity(a, b) {
-  a = a.toLowerCase(); b = b.toLowerCase();
+  a = a.toLowerCase().trim();
+  b = b.toLowerCase().trim();
   if (a === b) return 1;
-  const la = a.length, lb = b.length;
-  if (la === 0 || lb === 0) return 0;
-  const dp = Array.from({ length: la + 1 }, (_, i) => [i, ...Array(lb).fill(0)]);
-  for (let j = 0; j <= lb; j++) dp[0][j] = j;
-  for (let i = 1; i <= la; i++)
-    for (let j = 1; j <= lb; j++)
-      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
-  return 1 - dp[la][lb] / Math.max(la, lb);
+  if (!a.length || !b.length) return 0;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+  return 1 - dp[a.length][b.length] / Math.max(a.length, b.length);
 }
 
-function fetchHtml(url) {
+// Generic HTTPS GET → returns parsed JSON
+function getJson(url) {
   return new Promise((resolve, reject) => {
-    const opts = {
+    const req = https.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'sv-SE,sv;q=0.9,en;q=0.8',
-        'Accept': 'text/html,application/xhtml+xml'
+        'User-Agent': 'CMSW-ShelfCompanyGenerator/1.0',
+        'Accept': 'application/json'
       }
-    };
-    https.get(url, opts, (res) => {
+    }, (res) => {
+      // follow one redirect
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return fetchHtml(res.headers.location).then(resolve).catch(reject);
+        return getJson(res.headers.location).then(resolve).catch(reject);
       }
       let body = '';
       res.setEncoding('utf8');
-      res.on('data', chunk => body += chunk);
-      res.on('end', () => resolve(body));
-    }).on('error', reject).setTimeout(12000, function() { this.destroy(); reject(new Error('Timeout')); });
+      res.on('data', chunk => { body += chunk; });
+      res.on('end', () => {
+        try { resolve(JSON.parse(body)); }
+        catch (e) { reject(new Error('Invalid JSON from API')); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(12000, () => { req.destroy(); reject(new Error('Request timed out')); });
   });
 }
 
-// ---------- routes ----------
+// Score a list of raw company name strings against the proposed name
+function scoreNames(names, proposedClean) {
+  const seen = new Set();
+  return names
+    .filter(name => {
+      if (!name || name.length < 2) return false;
+      const key = name.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map(name => {
+      const score = levenshteinSimilarity(proposedClean, stripSuffix(name));
+      const risk = score >= 0.80 ? 'high' : score >= 0.55 ? 'medium' : 'low';
+      return { name, similarity: Math.round(score * 100), risk };
+    })
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 10);
+}
 
-// Serve the form flow config
-app.get('/api/flow', (req, res) => {
-  const flow = require('./formFlow.json');
-  res.json(flow);
-});
+function buildOverall(results) {
+  const high = results.filter(r => r.risk === 'high');
+  const med  = results.filter(r => r.risk === 'medium');
+  if (high.length > 0) return {
+    overall: `High risk — ${high.length} closely matching name(s) found. Bolagsverket will likely reject this name.`,
+    overallLevel: 'high'
+  };
+  if (med.length > 0) return {
+    overall: `Medium risk — ${med.length} potentially similar name(s) found. Manual review recommended before registering.`,
+    overallLevel: 'medium'
+  };
+  return {
+    overall: 'Low risk — No closely similar names found. This name appears available.',
+    overallLevel: 'low'
+  };
+}
 
-// Name control — searches allabolag.se
+// ─────────────────────────────────────────────
+//  Route: Name Control
+// ─────────────────────────────────────────────
+
 app.post('/api/control-name', async (req, res) => {
   const { company_name } = req.body;
   if (!company_name || !company_name.trim())
     return res.status(400).json({ error: 'No company name provided' });
 
+  const proposed      = company_name.trim();
+  const proposedClean = stripSuffix(proposed);
+  const encoded       = encodeURIComponent(proposedClean);
+
+  // OpenCorporates public API — Swedish companies (jurisdiction: se)
+  // Optional: add &api_token=YOUR_TOKEN for higher rate limits
+  const apiToken = process.env.OPENCORPORATES_API_TOKEN
+    ? `&api_token=${process.env.OPENCORPORATES_API_TOKEN}`
+    : '';
+  const ocUrl = `https://api.opencorporates.com/v0.4/companies/search?q=${encoded}&jurisdiction_code=se&per_page=30${apiToken}`;
+
   try {
-    const searchTerm = stripSuffix(company_name.trim());
-    const encoded = encodeURIComponent(searchTerm);
-    const searchUrl = `https://www.allabolag.se/what/${encoded}`;
+    const data = await getJson(ocUrl);
+    const companies = (data?.results?.companies || []).map(c => c.company?.name).filter(Boolean);
 
-    const html = await fetchHtml(searchUrl);
-
-    // Extract company names from allabolag.se result links
-    const namePattern = /href="\/[0-9]{6}-[0-9]{4}[^"]*"[^>]*>([^<]{3,80})</g;
-    const altPattern = /class="[^"]*(?:company|organization|result)[^"]*"[^>]*>([A-ZÅÄÖ][^<]{2,60})</g;
-    const found = new Map();
-
-    let m;
-    while ((m = namePattern.exec(html)) !== null) {
-      const name = m[1].trim();
-      if (name && !found.has(name.toLowerCase())) found.set(name.toLowerCase(), name);
-    }
-    while ((m = altPattern.exec(html)) !== null) {
-      const name = m[1].trim();
-      if (name && !found.has(name.toLowerCase())) found.set(name.toLowerCase(), name);
+    if (companies.length === 0) {
+      return res.json({
+        proposed_name: proposed,
+        overall: 'No results found in the company register. Please also verify manually via the link below.',
+        overallLevel: 'unknown',
+        results: [],
+        searchUrl: `https://www.allabolag.se/what/${encoded}`
+      });
     }
 
-    const proposedClean = stripSuffix(company_name.trim());
-    const results = [...found.values()].slice(0, 25).map(name => {
-      const score = levenshteinSimilarity(proposedClean, stripSuffix(name));
-      const risk = score >= 0.80 ? 'high' : score >= 0.55 ? 'medium' : 'low';
-      return { name, similarity: Math.round(score * 100), risk, url: searchUrl };
-    }).sort((a, b) => b.similarity - a.similarity).slice(0, 10);
+    const results = scoreNames(companies, proposedClean);
+    const { overall, overallLevel } = buildOverall(results);
 
-    const highRisk = results.filter(r => r.risk === 'high');
-    const medRisk  = results.filter(r => r.risk === 'medium');
-    let overall, overallLevel;
-    if (highRisk.length > 0) {
-      overall = `High risk — ${highRisk.length} closely matching name(s) found. Bolagsverket will likely reject this name.`;
-      overallLevel = 'high';
-    } else if (medRisk.length > 0) {
-      overall = `Medium risk — ${medRisk.length} potentially similar name(s) found. Manual review recommended.`;
-      overallLevel = 'medium';
-    } else {
-      overall = 'Low risk — No closely similar names found. This name appears available.';
-      overallLevel = 'low';
-    }
+    return res.json({
+      proposed_name: proposed,
+      overall,
+      overallLevel,
+      results: results.map(r => ({
+        ...r,
+        url: `https://www.allabolag.se/what/${encodeURIComponent(stripSuffix(r.name))}`
+      })),
+      searchUrl: `https://www.allabolag.se/what/${encoded}`
+    });
 
-    res.json({ proposed_name: company_name, overall, overallLevel, results, searchUrl });
   } catch (err) {
-    console.error('Control name error:', err.message);
-    res.status(500).json({ error: 'Failed to reach allabolag.se. Please try again.' });
+    console.error('Name control error:', err.message);
+    // Graceful fallback — give user the manual check link rather than a hard error
+    return res.json({
+      proposed_name: proposed,
+      overall: 'Automated search is temporarily unavailable. Please use the manual search link below to check the name on allabolag.se.',
+      overallLevel: 'unknown',
+      results: [],
+      searchUrl: `https://www.allabolag.se/what/${encoded}`
+    });
   }
 });
 
-// Generate document from answers
+// ─────────────────────────────────────────────
+//  Existing routes (unchanged)
+// ─────────────────────────────────────────────
+
+app.get('/api/flow', (req, res) => {
+  const flow = require('./formFlow.json');
+  res.json(flow);
+});
+
 app.post('/api/generate', async (req, res) => {
   try {
     const { answers, templateId } = req.body;
-
-    if (!answers || !templateId) {
+    if (!answers || !templateId)
       return res.status(400).json({ error: 'Missing answers or templateId' });
-    }
 
     const outputPath = await generateDocument(templateId, answers);
     const filename = path.basename(outputPath);
 
-    res.json({ 
-      success: true, 
-      downloadUrl: `/download/${filename}`,
-      filename 
-    });
+    res.json({ success: true, downloadUrl: `/download/${filename}`, filename });
   } catch (err) {
     console.error('Generation error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Download endpoint
 app.get('/download/:filename', (req, res) => {
   const filePath = path.join(__dirname, 'generated', req.params.filename);
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send('File not found');
-  }
+  if (!fs.existsSync(filePath)) return res.status(404).send('File not found');
   res.download(filePath);
 });
 
