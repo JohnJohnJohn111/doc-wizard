@@ -1,0 +1,284 @@
+{
+  "templates": [
+    {
+      "id": "service-agreement",
+      "name": "Service Agreement",
+      "description": "A professional services contract between a provider and client"
+    },
+    {
+      "id": "nda",
+      "name": "Non-Disclosure Agreement",
+      "description": "Mutual or one-way confidentiality agreement"
+    },
+    {
+      "id": "employment-offer",
+      "name": "Employment Offer Letter",
+      "description": "Formal job offer letter for new hires"
+    }
+  ],
+  "flows": {
+    "service-agreement": {
+      "startQuestion": "q1",
+      "questions": {
+        "q1": {
+          "id": "q1",
+          "field": "provider_name",
+          "label": "Your name or company name",
+          "type": "text",
+          "placeholder": "e.g. Acme Consulting LLC",
+          "required": true,
+          "next": "q2"
+        },
+        "q2": {
+          "id": "q2",
+          "field": "client_name",
+          "label": "Client's name or company name",
+          "type": "text",
+          "placeholder": "e.g. TechStartup Inc.",
+          "required": true,
+          "next": "q3"
+        },
+        "q3": {
+          "id": "q3",
+          "field": "service_type",
+          "label": "What type of services will you provide?",
+          "type": "select",
+          "options": ["Software Development", "Consulting", "Design", "Marketing", "Other"],
+          "required": true,
+          "next": "q4"
+        },
+        "q4": {
+          "id": "q4",
+          "field": "service_description",
+          "label": "Describe the services in detail",
+          "type": "textarea",
+          "placeholder": "e.g. Build a web application including frontend, backend, and deployment...",
+          "required": true,
+          "next": "q5"
+        },
+        "q5": {
+          "id": "q5",
+          "field": "payment_type",
+          "label": "How will payment be structured?",
+          "type": "select",
+          "options": ["Fixed Price", "Hourly Rate", "Monthly Retainer"],
+          "required": true,
+          "nextMap": {
+            "Fixed Price": "q6a",
+            "Hourly Rate": "q6b",
+            "Monthly Retainer": "q6c"
+          }
+        },
+        "q6a": {
+          "id": "q6a",
+          "field": "total_amount",
+          "label": "Total project price (USD)",
+          "type": "number",
+          "placeholder": "e.g. 15000",
+          "required": true,
+          "next": "q7"
+        },
+        "q6b": {
+          "id": "q6b",
+          "field": "hourly_rate",
+          "label": "Hourly rate (USD)",
+          "type": "number",
+          "placeholder": "e.g. 150",
+          "required": true,
+          "next": "q7"
+        },
+        "q6c": {
+          "id": "q6c",
+          "field": "monthly_rate",
+          "label": "Monthly retainer amount (USD)",
+          "type": "number",
+          "placeholder": "e.g. 5000",
+          "required": true,
+          "next": "q7"
+        },
+        "q7": {
+          "id": "q7",
+          "field": "start_date",
+          "label": "Project start date",
+          "type": "date",
+          "required": true,
+          "next": "q8"
+        },
+        "q8": {
+          "id": "q8",
+          "field": "end_date",
+          "label": "Expected end date (or leave blank for ongoing)",
+          "type": "date",
+          "required": false,
+          "next": "q9"
+        },
+        "q9": {
+          "id": "q9",
+          "field": "governing_law",
+          "label": "Which state/country law governs this agreement?",
+          "type": "text",
+          "placeholder": "e.g. California, USA",
+          "required": true,
+          "next": null
+        }
+      }
+    },
+    "nda": {
+      "startQuestion": "q1",
+      "questions": {
+        "q1": {
+          "id": "q1",
+          "field": "nda_type",
+          "label": "What type of NDA do you need?",
+          "type": "select",
+          "options": ["Mutual (both parties share info)", "One-Way (only one party shares)"],
+          "required": true,
+          "next": "q2"
+        },
+        "q2": {
+          "id": "q2",
+          "field": "party_one",
+          "label": "First party name",
+          "type": "text",
+          "placeholder": "e.g. Your Company LLC",
+          "required": true,
+          "next": "q3"
+        },
+        "q3": {
+          "id": "q3",
+          "field": "party_two",
+          "label": "Second party name",
+          "type": "text",
+          "placeholder": "e.g. Partner Corp",
+          "required": true,
+          "next": "q4"
+        },
+        "q4": {
+          "id": "q4",
+          "field": "confidential_info",
+          "label": "What type of confidential information will be shared?",
+          "type": "textarea",
+          "placeholder": "e.g. Business plans, technical specifications, financial data, customer lists...",
+          "required": true,
+          "next": "q5"
+        },
+        "q5": {
+          "id": "q5",
+          "field": "duration_years",
+          "label": "How many years should the NDA remain in effect?",
+          "type": "select",
+          "options": ["1 year", "2 years", "3 years", "5 years", "Indefinitely"],
+          "required": true,
+          "next": "q6"
+        },
+        "q6": {
+          "id": "q6",
+          "field": "governing_law",
+          "label": "Governing jurisdiction",
+          "type": "text",
+          "placeholder": "e.g. New York, USA",
+          "required": true,
+          "next": null
+        }
+      }
+    },
+    "employment-offer": {
+      "startQuestion": "q1",
+      "questions": {
+        "q1": {
+          "id": "q1",
+          "field": "company_name",
+          "label": "Company name",
+          "type": "text",
+          "placeholder": "e.g. Innovatech Inc.",
+          "required": true,
+          "next": "q2"
+        },
+        "q2": {
+          "id": "q2",
+          "field": "candidate_name",
+          "label": "Candidate's full name",
+          "type": "text",
+          "placeholder": "e.g. Jane Smith",
+          "required": true,
+          "next": "q3"
+        },
+        "q3": {
+          "id": "q3",
+          "field": "job_title",
+          "label": "Job title",
+          "type": "text",
+          "placeholder": "e.g. Senior Software Engineer",
+          "required": true,
+          "next": "q4"
+        },
+        "q4": {
+          "id": "q4",
+          "field": "employment_type",
+          "label": "Employment type",
+          "type": "select",
+          "options": ["Full-Time", "Part-Time", "Contract"],
+          "required": true,
+          "nextMap": {
+            "Full-Time": "q5",
+            "Part-Time": "q5b",
+            "Contract": "q5c"
+          }
+        },
+        "q5": {
+          "id": "q5",
+          "field": "annual_salary",
+          "label": "Annual salary (USD)",
+          "type": "number",
+          "placeholder": "e.g. 120000",
+          "required": true,
+          "next": "q6"
+        },
+        "q5b": {
+          "id": "q5b",
+          "field": "hourly_wage",
+          "label": "Hourly wage (USD)",
+          "type": "number",
+          "placeholder": "e.g. 45",
+          "required": true,
+          "next": "q6"
+        },
+        "q5c": {
+          "id": "q5c",
+          "field": "contract_rate",
+          "label": "Contract rate (USD/hr or fixed)",
+          "type": "text",
+          "placeholder": "e.g. $85/hr or $20,000 fixed",
+          "required": true,
+          "next": "q6"
+        },
+        "q6": {
+          "id": "q6",
+          "field": "start_date",
+          "label": "Proposed start date",
+          "type": "date",
+          "required": true,
+          "next": "q7"
+        },
+        "q7": {
+          "id": "q7",
+          "field": "benefits",
+          "label": "Benefits included",
+          "type": "checkbox",
+          "options": ["Health Insurance", "Dental & Vision", "401(k)", "Paid Time Off", "Remote Work", "Stock Options"],
+          "required": false,
+          "next": "q8"
+        },
+        "q8": {
+          "id": "q8",
+          "field": "reporting_to",
+          "label": "Who will this person report to?",
+          "type": "text",
+          "placeholder": "e.g. VP of Engineering",
+          "required": false,
+          "next": null
+        }
+      }
+    }
+  }
+}

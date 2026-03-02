@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocWizard — Document Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1A1A2E;
+      --ink-soft: #555577;
+      --paper: #FAFAF7;
+      --card: #FFFFFF;
+      --accent: #4A6FA5;
+      --accent-light: #EEF2F8;
+      --success: #2A7A5A;
+      --border: #E0E0E8;
+      --shadow: 0 2px 24px rgba(26,26,46,0.08);
+      --shadow-lg: 0 8px 48px rgba(26,26,46,0.14);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── Layout ── */
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      grid-column: 1 / -1;
+      background: var(--ink);
+      color: white;
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span { color: #AAC4E8; }
+
+    header p {
+      font-size: 0.8rem;
+      color: #99999F;
+      margin-left: auto;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: #F5F5F0;
+      border-right: 1px solid var(--border);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-soft);
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      transition: all 0.2s;
+    }
+
+    .step-item.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .step-item.completed {
+      color: var(--success);
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .step-item.active .step-num {
+      background: var(--accent);
+      color: white;
+    }
+
+    .step-item.completed .step-num {
+      background: var(--success);
+      color: white;
+    }
+
+    .step-item.completed .step-num::after {
+      content: '✓';
+    }
+
+    /* ── Main Area ── */
+    .main {
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      overflow-y: auto;
+    }
+
+    /* ── Template Selection ── */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .template-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .template-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .template-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .template-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .template-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .template-card p {
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      line-height: 1.4;
+    }
+
+    /* ── Question Card ── */
+    .question-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: var(--shadow);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .question-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .question-label {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem;
+      line-height: 1.35;
+      color: var(--ink);
+      margin-bottom: 28px;
+    }
+
+    /* ── Inputs ── */
+    .field-wrap {
+      margin-bottom: 24px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--ink);
+      background: #FAFAFA;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(74,111,165,0.12);
+      background: white;
+    }
+
+    textarea { resize: vertical; min-height: 120px; }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--ink-soft);
+    }
+
+    /* Select options as cards */
+    .option-cards {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option-card {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.95rem;
+      background: white;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .option-card:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .option-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .option-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .option-card.selected .option-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Checkbox group */
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.9rem;
+    }
+
+    .checkbox-item:hover { border-color: var(--accent); }
+
+    .checkbox-item.checked {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .checkbox-box {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      transition: all 0.15s;
+    }
+
+    .checkbox-item.checked .checkbox-box {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* ── Navigation ── */
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    button {
+      padding: 13px 28px;
+      border-radius: 10px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover { background: #3A5F95; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-soft);
+      border: 2px solid var(--border);
+    }
+
+    .btn-ghost:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+    /* ── Progress ── */
+    .progress-bar {
+      width: 100%;
+      max-width: 600px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 32px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* ── Success Screen ── */
+    .success-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 56px 40px;
+      max-width: 520px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.4s ease;
+    }
+
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      background: #E8F5EE;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 24px;
+    }
+
+    .success-card h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .success-card p {
+      color: var(--ink-soft);
+      margin-bottom: 28px;
+      font-size: 0.95rem;
+    }
+
+    .btn-download {
+      background: var(--success);
+      color: white;
+      font-size: 1rem;
+      padding: 16px 36px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-download:hover { background: #1E6348; transform: translateY(-1px); }
+
+    .btn-restart {
+      background: transparent;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      margin-top: 12px;
+      border: none;
+      padding: 8px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* ── Section heading ── */
+    .section-heading {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .section-sub {
+      color: var(--ink-soft);
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Optional tag ── */
+    .optional-tag {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 0.75rem;
+      background: #F0F0F0;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: var(--ink-soft);
+      font-family: 'DM Sans', sans-serif;
+      vertical-align: middle;
+    }
+
+    /* ── Generating overlay ── */
+    .generating {
+      text-align: center;
+      padding: 48px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ── */
+    .error-msg {
+      color: #B44040;
+      background: #FFF0F0;
+      border: 1px solid #FFCCCC;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .main { padding: 24px 20px; }
+      .checkbox-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="logo">Doc<span>Wizard</span></div>
+      <p>Generate professional Word documents in minutes</p>
+    </header>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-title">Progress</div>
+      <div class="steps-list" id="stepsList"></div>
+    </aside>
+    <main class="main" id="main">
+      <!-- Dynamic content here -->
+    </main>
+  </div>
+
+  <script>
+    let flowData = null;
+    let selectedTemplate = null;
+    let answers = {};
+    let questionHistory = [];
+    let currentQuestion = null;
+
+    const TEMPLATE_ICONS = {
+      'service-agreement': '📋',
+      'nda': '🔒',
+      'employment-offer': '💼'
+    };
+
+    const STEP_LABELS = ['Choose Template', 'Answer Questions', 'Review & Generate'];
+
+    async function init() {
+      try {
+        const res = await fetch('/api/flow');
+        flowData = await res.json();
+        renderTemplateSelect();
+      } catch(e) {
+        document.getElementById('main').innerHTML = `<div class="error-msg">Failed to load. Is the server running?</div>`;
+      }
+    }
+
+    // ── Sidebar ──
+    function updateSidebar(phase) {
+      const list = document.getElementById('stepsList');
+      list.innerHTML = STEP_LABELS.map((label, i) => {
+        const step = i + 1;
+        const isActive = step === phase;
+        const isComplete = step < phase;
+        return `<div class="step-item ${isActive ? 'active' : ''} ${isComplete ? 'completed' : ''}">
+          <div class="step-num">${isComplete ? '' : step}</div>
+          <span>${label}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Template Select ──
+    function renderTemplateSelect() {
+      updateSidebar(1);
+      const main = document.getElementById('main');
+      main.innerHTML = `
+        <h1 class="section-heading">What document do you need?</h1>
+        <p class="section-sub">Choose a template to get started.</p>
+        <div class="template-grid" id="templateGrid">
+          ${flowData.templates.map(t => `
+            <button class="template-card" onclick="selectTemplate('${t.id}')" id="tcard-${t.id}">
+              <div class="template-icon">${TEMPLATE_ICONS[t.id] || '📄'}</div>
+              <h3>${t.name}</h3>
+              <p>${t.description}</p>
+            </button>
+          `).join('')}
+        </div>
+        <div style="margin-top:28px">
+          <button class="btn-primary" id="startBtn" onclick="startFlow()" disabled>Continue →</button>
+        </div>
+      `;
+    }
+
+    function selectTemplate(id) {
+      selectedTemplate = id;
+      document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById(`tcard-${id}`).classList.add('selected');
+      document.getElementById('startBtn').disabled = false;
+    }
+
+    function startFlow() {
+      if (!selectedTemplate) return;
+      answers = {};
+      questionHistory = [];
+      const flow = flowData.flows[selectedTemplate];
+      currentQuestion = flow.questions[flow.startQuestion];
+      renderQuestion(0);
+    }
+
+    // ── Questions ──
+    function getTotalQuestions(templateId) {
+      return Object.keys(flowData.flows[templateId].questions).length;
+    }
+
+    function renderQuestion(step) {
+      updateSidebar(2);
+      const main = document.getElementById('main');
+      const q = currentQuestion;
+      const totalApprox = getTotalQuestions(selectedTemplate);
+      const progress = Math.min(((questionHistory.length) / totalApprox) * 100, 90);
+
+      let inputHtml;
+
+      if (q.type === 'select') {
+        inputHtml = `<div class="option-cards" id="optionCards">
+          ${q.options.map(opt => `
+            <button class="option-card ${answers[q.field] === opt ? 'selected' : ''}"
+              onclick="selectOption('${opt.replace(/'/g, "\\'")}')">
+              <div class="option-dot"></div>${opt}
+            </button>
+          `).join('')}
+        </div>`;
+      } else if (q.type === 'checkbox') {
+        const checked = answers[q.field] || [];
+        inputHtml = `<div class="checkbox-group" id="checkboxGroup">
+          ${q.options.map(opt => `
+            <div class="checkbox-item ${checked.includes(opt) ? 'checked' : ''}"
+              onclick="toggleCheckbox('${opt.replace(/'/g, "\\'")}')">
+              <div class="checkbox-box">${checked.includes(opt) ? '✓' : ''}</div>
+              ${opt}
+            </div>
+          `).join('')}
+        </div>`;
+      } else if (q.type === 'textarea') {
+        inputHtml = `<textarea id="fieldInput" placeholder="${q.placeholder || ''}" 
+          oninput="updateAnswer(this.value)">${answers[q.field] || ''}</textarea>`;
+      } else {
+        inputHtml = `<input type="${q.type}" id="fieldInput" 
+          placeholder="${q.placeholder || ''}" 
+          value="${answers[q.field] || ''}"
+          oninput="updateAnswer(this.value)"
+          onkeydown="if(event.key==='Enter') nextQuestion()">`;
+      }
+
+      main.innerHTML = `
+        <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+        <div class="question-card">
+          <div class="question-badge">Question ${questionHistory.length + 1}</div>
+          <div class="question-label">${q.label}${!q.required ? '<span class="optional-tag">optional</span>' : ''}</div>
+          <div class="field-wrap">${inputHtml}</div>
+          <div id="errorMsg"></div>
+          <div class="nav-buttons">
+            ${questionHistory.length > 0 ? `<button class="btn-ghost" onclick="prevQuestion()">← Back</button>` : `<button class="btn-ghost" onclick="renderTemplateSelect()">← Back</button>`}
+            <button class="btn-primary" onclick="nextQuestion()" id="nextBtn">
+              ${q.next === null && !q.nextMap ? 'Generate Document →' : 'Next →'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Focus input
+      const inp = document.getElementById('fieldInput');
+      if (inp) setTimeout(() => inp.focus(), 100);
+    }
+
+    function updateAnswer(val) {
+      if (currentQuestion) answers[currentQuestion.field] = val;
+    }
+
+    function selectOption(opt) {
+      answers[currentQuestion.field] = opt;
+      document.querySelectorAll('.option-card').forEach(c => {
+        c.classList.remove('selected');
+        c.querySelector('.option-dot').style.background = '';
+      });
+      event.currentTarget.classList.add('selected');
+    }
+
+    function toggleCheckbox(opt) {
+      const arr = answers[currentQuestion.field] || [];
+      const idx = arr.indexOf(opt);
+      if (idx === -1) arr.push(opt); else arr.splice(idx, 1);
+      answers[currentQuestion.field] = arr;
+
+      const items = document.querySelectorAll('.checkbox-item');
+      items.forEach(item => {
+        const label = item.textContent.trim();
+        const isChecked = arr.includes(label);
+        item.classList.toggle('checked', isChecked);
+        item.querySelector('.checkbox-box').textContent = isChecked ? '✓' : '';
+      });
+    }
+
+    function prevQuestion() {
+      if (questionHistory.length === 0) { renderTemplateSelect(); return; }
+      currentQuestion = questionHistory.pop();
+      renderQuestion(questionHistory.length);
+    }
+
+    function nextQuestion() {
+      const q = currentQuestion;
+      const val = answers[q.field];
+
+      // Validate
+      if (q.required) {
+        if (q.type === 'checkbox') {
+          // checkboxes optional by nature
+        } else if (!val || (typeof val === 'string' && !val.trim())) {
+          document.getElementById('errorMsg').innerHTML = `<div class="error-msg">This field is required.</div>`;
+          return;
+        }
+      }
+
+      document.getElementById('errorMsg') && (document.getElementById('errorMsg').innerHTML = '');
+
+      questionHistory.push(q);
+
+      // Determine next
+      const flow = flowData.flows[selectedTemplate];
+      let nextId;
+
+      if (q.nextMap) {
+        nextId = q.nextMap[val];
+      } else {
+        nextId = q.next;
+      }
+
+      if (nextId) {
+        currentQuestion = flow.questions[nextId];
+        renderQuestion(questionHistory.length);
+      } else {
+        generateDocument();
+      }
+    }
+
+    // ── Generate ──
+    async function generateDocument() {
+      updateSidebar(3);
+      const main = document.getElementById('main');
+      main.innerHTML = `<div class="generating"><div class="spinner"></div><p style="color:var(--ink-soft)">Building your document…</p></div>`;
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ answers, templateId: selectedTemplate })
+        });
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.error || 'Generation failed');
+
+        const templateName = flowData.templates.find(t => t.id === selectedTemplate)?.name || 'Document';
+
+        main.innerHTML = `
+          <div class="success-card">
+            <div class="success-icon">✓</div>
+            <h2>Document Ready!</h2>
+            <p>Your <strong>${templateName}</strong> has been generated and is ready to download.</p>
+            <a href="${data.downloadUrl}" download>
+              <button class="btn-download">⬇ Download Word Document</button>
+            </a>
+            <br>
+            <button class="btn-restart" onclick="renderTemplateSelect()">Create another document</button>
+          </div>
+        `;
+      } catch (err) {
+        main.innerHTML = `
+          <div class="question-card">
+            <div class="error-msg" style="margin:0 0 20px">Error: ${err.message}</div>
+            <button class="btn-ghost" onclick="renderTemplateSelect()">← Start Over</button>
+          </div>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
