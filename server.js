@@ -100,7 +100,8 @@ Return at most 10 results, sorted by similarity descending. If no conflicts foun
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'anthropic-beta': 'interleaved-thinking-2025-05-14'
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
