@@ -547,7 +547,10 @@ async function controlName() {
       listEl.innerHTML = data.results.map(r => {
         const rc = rp[r.risk] || rp.low;
         return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F0EDE6; gap:12px;">
-          <a href="${r.url}" target="_blank" style="color:var(--navy-mid); font-size:0.84rem; text-decoration:none; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.name}</a>
+          <div style="flex:1; min-width:0;">
+            <a href="${r.url}" target="_blank" style="color:var(--navy-mid); font-size:0.84rem; text-decoration:none; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.name}</a>
+            ${r.matchReason ? `<span style="font-size:0.73rem; color:#888; font-style:italic;">${r.matchReason}</span>` : ''}
+          </div>
           <div style="display:flex; gap:7px; align-items:center; flex-shrink:0;">
             <span style="font-size:0.75rem; color:#888;">${r.similarity}% match</span>
             <span style="padding:2px 9px; border-radius:10px; font-size:0.7rem; font-weight:700; background:${rc.bg}; color:${rc.color};">${r.risk.toUpperCase()}</span>
