@@ -322,6 +322,48 @@ function renderQuestion() {
     inputHtml = `<div id="peopleList">` + people.map((p, i) => renderPersonCard(p, i, q)).join('') + `</div>
       <button class="add-person-btn" onclick="addPerson()">+ Add another person</button>`;
 
+    if (q.id === 'q9') {
+      const chk9 = answers['eea_board'] === true;
+      inputHtml += `
+        <label id="eeaBoardLabel" onclick="toggleEea('eea_board','eeaBoardBox','eeaBoardLabel')"
+          style="display:flex;align-items:flex-start;gap:12px;margin-top:20px;padding:14px 16px;
+                 border:1.5px solid ${chk9 ? 'var(--navy)' : 'var(--border)'};border-radius:4px;
+                 cursor:pointer;user-select:none;background:${chk9 ? 'var(--navy-light)' : '#FAFAFA'};transition:all 0.15s;">
+          <div id="eeaBoardBox"
+            style="width:18px;height:18px;flex-shrink:0;margin-top:1px;border-radius:3px;
+                   display:flex;align-items:center;justify-content:center;font-size:0.7rem;
+                   transition:all 0.15s;color:white;
+                   border:1.5px solid ${chk9 ? 'var(--navy)' : 'var(--border)'};
+                   background:${chk9 ? 'var(--navy)' : 'transparent'};">
+            ${chk9 ? '&#10003;' : ''}
+          </div>
+          <span style="font-size:0.88rem;color:var(--ink);line-height:1.5;">
+            I confirm that at least half the board members are residents within the EEA.
+          </span>
+        </label>`;
+    }
+
+    if (q.id === 'q10') {
+      const chk10 = answers['eea_deputy'] === true;
+      inputHtml += `
+        <label id="eeaDeputyLabel" onclick="toggleEea('eea_deputy','eeaDeputyBox','eeaDeputyLabel')"
+          style="display:flex;align-items:flex-start;gap:12px;margin-top:20px;padding:14px 16px;
+                 border:1.5px solid ${chk10 ? 'var(--navy)' : 'var(--border)'};border-radius:4px;
+                 cursor:pointer;user-select:none;background:${chk10 ? 'var(--navy-light)' : '#FAFAFA'};transition:all 0.15s;">
+          <div id="eeaDeputyBox"
+            style="width:18px;height:18px;flex-shrink:0;margin-top:1px;border-radius:3px;
+                   display:flex;align-items:center;justify-content:center;font-size:0.7rem;
+                   transition:all 0.15s;color:white;
+                   border:1.5px solid ${chk10 ? 'var(--navy)' : 'var(--border)'};
+                   background:${chk10 ? 'var(--navy)' : 'transparent'};">
+            ${chk10 ? '&#10003;' : ''}
+          </div>
+          <span style="font-size:0.88rem;color:var(--ink);line-height:1.5;">
+            I confirm that at least half the deputy board members are residents within the EEA (if applicable).
+          </span>
+        </label>`;
+    }
+
   } else if (q.type === 'textarea') {
     inputHtml = `<textarea id="mainInput" placeholder="${q.placeholder || ''}" oninput="answers['${q.field}']=this.value">${answers[q.field] || ''}</textarea>`;
   } else {
@@ -420,6 +462,23 @@ function removePerson(idx) {
   list.innerHTML = answers[q.field].map((p, i) => renderPersonCard(p, i, q)).join('');
 }
 
+function toggleEea(answerKey, boxId, labelId) {
+  const current = answers[answerKey] === true;
+  answers[answerKey] = !current;
+  const isNowChecked = answers[answerKey];
+  const box = document.getElementById(boxId);
+  const label = document.getElementById(labelId);
+  if (box) {
+    box.innerHTML = isNowChecked ? '&#10003;' : '';
+    box.style.background = isNowChecked ? 'var(--navy)' : 'transparent';
+    box.style.borderColor = isNowChecked ? 'var(--navy)' : 'var(--border)';
+  }
+  if (label) {
+    label.style.borderColor = isNowChecked ? 'var(--navy)' : 'var(--border)';
+    label.style.background  = isNowChecked ? 'var(--navy-light)' : '#FAFAFA';
+  }
+}
+
 function toggleCheck(opt, el) {
   const arr = Array.isArray(answers[currentQ.field]) ? answers[currentQ.field] : [];
   const idx = arr.indexOf(opt);
@@ -457,6 +516,14 @@ function nextQ() {
       document.getElementById('errMsg').innerHTML = '<div class="error-msg">Please add at least one person with a full name.</div>';
       return;
     }
+  }
+  if (q.id === 'q9' && answers['eea_board'] !== true) {
+    document.getElementById('errMsg').innerHTML = '<div class="error-msg">Please confirm that at least half the board members are residents within the EEA before continuing.</div>';
+    return;
+  }
+  if (q.id === 'q10' && answers['eea_deputy'] !== true) {
+    document.getElementById('errMsg').innerHTML = '<div class="error-msg">Please confirm the EEA residency requirement for deputy board members before continuing.</div>';
+    return;
   }
 
   history.push(q);
