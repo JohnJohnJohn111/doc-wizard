@@ -10,71 +10,110 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --navy: #1B3A4B; --navy-mid: #2E5C7A; --navy-light: #EBF2F7;
-      --gold: #B8963E; --gold-light: #F9F3E8;
+      --gold: #B8963E; --gold-light: #FBF6EC;
       --ink: #1A1A1A; --ink-soft: #555555;
       --paper: #F8F7F4; --white: #FFFFFF; --border: #D8D8D0; --success: #2A6B4A;
+      --context-bg: #F4F0E8; --context-border: #DDD8CC;
     }
     html, body { height: 100%; background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.65; }
-    .site-header { background: var(--navy); padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; }
+
+    /* Header */
+    .site-header { background: var(--navy); padding: 16px 40px; display: flex; align-items: center; }
     .site-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; color: white; letter-spacing: 0.06em; }
     .site-logo span { color: #AAC8E0; font-weight: 400; font-size: 1rem; margin-left: 10px; }
+
+    /* Pages */
     .page { display: none; }
     .page.active { display: flex; }
-    #landingPage { min-height: calc(100vh - 60px); align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 60px 24px; }
+
+    /* Landing */
+    #landingPage { min-height: calc(100vh - 56px); align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 60px 24px; }
     .landing-inner { max-width: 560px; }
     .landing-crest { width: 72px; height: 72px; background: var(--navy); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px; font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: white; letter-spacing: 0.05em; }
     .landing-title { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 600; color: var(--navy); line-height: 1.2; margin-bottom: 20px; }
     .landing-text { font-size: 1rem; color: var(--ink-soft); margin-bottom: 40px; line-height: 1.7; }
     .btn-continue { background: var(--navy); color: white; border: none; padding: 16px 48px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 500; letter-spacing: 0.04em; border-radius: 4px; cursor: pointer; transition: background 0.2s, transform 0.15s; }
     .btn-continue:hover { background: var(--navy-mid); transform: translateY(-1px); }
-    #formPage { min-height: calc(100vh - 60px); flex-direction: row; }
-    .form-sidebar { width: 240px; flex-shrink: 0; background: var(--navy); padding: 32px 20px; display: flex; flex-direction: column; gap: 4px; }
-    .sidebar-label { font-size: 0.65rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: #6A9AB8; margin-bottom: 10px; }
-    .nav-item { padding: 8px 12px; border-radius: 4px; font-size: 0.78rem; color: #8EB8D4; cursor: pointer; transition: all 0.15s; line-height: 1.3; }
+
+    /* Form page layout */
+    #formPage { min-height: calc(100vh - 56px); flex-direction: row; }
+
+    /* Left nav sidebar */
+    .form-sidebar { width: 210px; flex-shrink: 0; background: var(--navy); padding: 28px 18px; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; }
+    .sidebar-label { font-size: 0.63rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: #6A9AB8; margin-bottom: 10px; }
+    .nav-item { padding: 7px 11px; border-radius: 4px; font-size: 0.76rem; color: #8EB8D4; cursor: pointer; transition: all 0.15s; line-height: 1.35; }
     .nav-item:hover { background: rgba(255,255,255,0.07); color: white; }
     .nav-item.active { background: rgba(255,255,255,0.12); color: white; font-weight: 500; }
     .nav-item.done { color: #7EC8A0; }
     .nav-item.done::before { content: "✓  "; }
-    .form-main { flex: 1; overflow-y: auto; padding: 48px; display: flex; flex-direction: column; align-items: flex-start; }
-    .progress-wrap { width: 100%; max-width: 680px; margin-bottom: 32px; }
+
+    /* Centre scrollable area */
+    .form-main { flex: 1; overflow-y: auto; padding: 40px 32px; display: flex; flex-direction: column; align-items: flex-start; }
+
+    /* Two-column layout: card + context */
+    .form-row { display: flex; gap: 24px; width: 100%; max-width: 1080px; align-items: flex-start; }
+
+    /* Progress */
+    .progress-wrap { width: 100%; max-width: 1080px; margin-bottom: 28px; }
     .progress-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--ink-soft); margin-bottom: 8px; }
     .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
     .progress-fill { height: 100%; background: var(--gold); transition: width 0.4s ease; }
-    .q-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 40px 44px; width: 100%; max-width: 680px; box-shadow: 0 2px 16px rgba(0,0,0,0.05); animation: fadeUp 0.25s ease; }
+
+    /* Question card */
+    .q-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 36px 40px; flex: 1; min-width: 0; box-shadow: 0 2px 16px rgba(0,0,0,0.05); animation: fadeUp 0.25s ease; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .q-number { font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 10px; }
-    .q-label { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 500; color: var(--navy); line-height: 1.3; margin-bottom: 8px; }
+    .q-number { font-size: 0.68rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 10px; }
+    .q-label { font-family: 'Cormorant Garamond', serif; font-size: 1.55rem; font-weight: 500; color: var(--navy); line-height: 1.3; margin-bottom: 8px; }
     .q-hint { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 24px; font-style: italic; }
-    .optional-badge { display: inline-block; margin-left: 10px; font-size: 0.68rem; background: #F0EDE6; padding: 2px 8px; border-radius: 3px; color: #888; font-family: 'Inter', sans-serif; vertical-align: middle; font-weight: 400; }
+    .optional-badge { display: inline-block; margin-left: 10px; font-size: 0.65rem; background: #F0EDE6; padding: 2px 8px; border-radius: 3px; color: #888; font-family: 'Inter', sans-serif; vertical-align: middle; font-weight: 400; }
+
+    /* Context panel */
+    .context-panel { width: 300px; flex-shrink: 0; background: var(--context-bg); border: 1px solid var(--context-border); border-radius: 8px; padding: 24px 22px; animation: fadeUp 0.3s ease; }
+    .context-panel.hidden { display: none; }
+    .context-icon { font-size: 1.1rem; margin-bottom: 10px; }
+    .context-title { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 10px; }
+    .context-body { font-size: 0.82rem; color: #4A4030; line-height: 1.65; }
+    .context-body p { margin-bottom: 10px; }
+    .context-body p:last-child { margin-bottom: 0; }
+
+    /* Inputs */
     input[type="text"], input[type="email"], textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--ink); background: #FAFAFA; outline: none; transition: border-color 0.2s; resize: vertical; }
     input:focus, textarea:focus { border-color: var(--navy-mid); background: white; }
     textarea { min-height: 90px; }
+
+    /* Checkboxes */
     .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .check-item { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.15s; font-size: 0.88rem; user-select: none; }
     .check-item:hover { border-color: var(--navy-mid); background: var(--navy-light); }
     .check-item.checked { border-color: var(--navy); background: var(--navy-light); color: var(--navy); font-weight: 500; }
     .check-box { width: 18px; height: 18px; border: 1.5px solid var(--border); border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.7rem; transition: all 0.15s; }
     .check-item.checked .check-box { background: var(--navy); border-color: var(--navy); color: white; }
-    .person-card { border: 1.5px solid var(--border); border-radius: 6px; padding: 20px 24px; margin-bottom: 14px; background: #FAFAF8; position: relative; }
-    .person-card-title { font-size: 0.78rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px; }
-    .person-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .person-field-label { font-size: 0.73rem; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; display: block; }
+
+    /* People cards */
+    .person-card { border: 1.5px solid var(--border); border-radius: 6px; padding: 20px 22px; margin-bottom: 14px; background: #FAFAF8; position: relative; }
+    .person-card-title { font-size: 0.76rem; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+    .person-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .person-field-label { font-size: 0.72rem; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; display: block; }
     .person-field-wrap { display: flex; flex-direction: column; }
     .person-field-wrap.full { grid-column: 1 / -1; }
     .chairman-toggle { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 0.85rem; cursor: pointer; color: var(--navy); user-select: none; }
     .chairman-toggle input { cursor: pointer; accent-color: var(--navy); width: 16px; height: 16px; }
-    .remove-person { position: absolute; top: 14px; right: 16px; background: none; border: none; color: #AAAAAA; font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1; transition: color 0.15s; }
+    .remove-person { position: absolute; top: 14px; right: 14px; background: none; border: none; color: #AAAAAA; font-size: 1rem; cursor: pointer; padding: 4px; line-height: 1; transition: color 0.15s; }
     .remove-person:hover { color: #CC4444; }
-    .add-person-btn { background: none; border: 1.5px dashed var(--border); border-radius: 4px; padding: 12px; width: 100%; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--navy-mid); cursor: pointer; transition: all 0.15s; margin-top: 4px; }
+    .add-person-btn { background: none; border: 1.5px dashed var(--border); border-radius: 4px; padding: 11px; width: 100%; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--navy-mid); cursor: pointer; transition: all 0.15s; margin-top: 4px; }
     .add-person-btn:hover { border-color: var(--navy-mid); background: var(--navy-light); }
+
+    /* Nav buttons */
     .nav-buttons { display: flex; gap: 12px; margin-top: 28px; }
-    .btn-primary { background: var(--navy); color: white; border: none; padding: 13px 32px; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+    .btn-primary { background: var(--navy); color: white; border: none; padding: 13px 30px; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: background 0.2s, transform 0.15s; }
     .btn-primary:hover { background: var(--navy-mid); transform: translateY(-1px); }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .btn-ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--border); padding: 12px 24px; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.15s; }
+    .btn-ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--border); padding: 12px 22px; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.15s; }
     .btn-ghost:hover { border-color: var(--ink-soft); color: var(--ink); }
     .error-msg { color: #B44040; background: #FFF0F0; border: 1px solid #FFCCCC; border-radius: 4px; padding: 10px 14px; font-size: 0.85rem; margin-top: 10px; }
-    .success-wrap { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 60px); padding: 48px; }
+
+    /* Success */
+    .success-wrap { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 56px); padding: 48px; }
     .success-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 56px 48px; max-width: 500px; text-align: center; box-shadow: 0 4px 32px rgba(0,0,0,0.08); animation: fadeUp 0.3s ease; }
     .success-icon { width: 64px; height: 64px; background: #E8F5EE; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 24px; }
     .success-card h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; color: var(--navy); margin-bottom: 12px; }
@@ -84,13 +123,19 @@
     .btn-restart { background: none; border: none; color: var(--ink-soft); font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; margin-top: 14px; text-decoration: underline; text-underline-offset: 3px; display: block; }
     .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .form-row { flex-direction: column; max-width: 680px; }
+      .context-panel { width: 100%; }
+    }
     @media (max-width: 768px) {
       #formPage { flex-direction: column; }
-      .form-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; padding: 16px; gap: 6px; }
+      .form-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; padding: 14px; gap: 5px; }
       .sidebar-label { width: 100%; }
-      .nav-item { font-size: 0.7rem; padding: 6px 10px; }
-      .form-main { padding: 24px 18px; }
-      .q-card { padding: 28px 22px; }
+      .nav-item { font-size: 0.7rem; padding: 5px 8px; }
+      .form-main { padding: 20px 16px; }
+      .q-card { padding: 24px 20px; }
       .check-grid { grid-template-columns: 1fr; }
       .person-fields { grid-template-columns: 1fr; }
       .person-field-wrap.full { grid-column: 1; }
@@ -136,10 +181,84 @@ let currentQ = null;
 
 const NAV_LABELS = {
   q1: 'Entity name', q2: 'Address', q3: 'Accounting year',
-  q4: 'Business', q5: 'Share capital', q6: 'Shareholder(s)',
+  q4: 'Business activity', q5: 'Share capital', q6: 'Shareholder(s)',
   q7: 'E-mail', q8: 'Provisions', q9: 'Board members',
   q10: 'Deputy board members', q11: 'Managing director',
   q12: 'Authorized signatory', q13: 'Auditor'
+};
+
+// Context guidance for each question, sourced from CMSW guidance notes
+const CONTEXT = {
+  q1: {
+    title: 'Guidance — Business Name',
+    body: `<p>When choosing a company name, it is important to find a name that has not previously been registered or is too similar to a previously registered name.</p>
+           <p>There are also certain other registration obstacles to consider, such as that the name may not infringe on trademarks, family names or other protected designations.</p>
+           <p>In order to achieve distinctiveness it may be appropriate to use first and last names, place names and/or imaginary words in combination with words related to the business. Feel free to give several name suggestions.</p>`
+  },
+  q2: {
+    title: 'Guidance — Address',
+    body: `<p>The company's intended registered address.</p>`
+  },
+  q3: {
+    title: 'Guidance — Accounting Year',
+    body: `<p>The accounting year shall encompass twelve months. Companies within a group shall follow the same accounting year.</p>`
+  },
+  q4: {
+    title: 'Guidance — Business Activity',
+    body: `<p>The description of the business shall include information on the type of business, main industry and/or type of goods.</p>
+           <p>The business shall be described in as much detail as possible.</p>`
+  },
+  q5: {
+    title: 'Guidance — Share Capital',
+    body: `<p>We recommend a share capital of SEK 25,000 distributed over 500 shares.</p>
+           <p>If you wish the company to have a higher share capital, please let us know.</p>`
+  },
+  q6: {
+    title: 'Guidance — Founder / Shareholder',
+    body: `<p>Name the individual or legal entity who will establish the company.</p>
+           <p>If the acquirer is a legal entity, please also name the authorized signatory.</p>`
+  },
+  q7: {
+    title: 'Guidance — E-mail Address',
+    body: `<p>Should you choose to list an e-mail address, you will automatically receive an e-mail from the Swedish Companies Registration Office each time an application for changes concerning the company is registered.</p>`
+  },
+  q8: {
+    title: 'Guidance — Transfer Conditions & Share Certificates',
+    body: `<p>The Swedish Companies Act allows for three different clauses: <strong>consent clause</strong>, <strong>pre-emption clause</strong> and <strong>right of first refusal clause</strong>.</p>
+           <p><em>Consent</em> means shares may be transferred to a new owner only with the company's consent.</p>
+           <p><em>Pre-emption</em> means a shareholder or another person shall be offered to purchase shares before they may be transferred.</p>
+           <p><em>Right of first refusal</em> means a shareholder or another person shall have the right to redeem shares that have been transferred to a new owner. We generally recommend this clause as it can be drafted to also affect family acquisitions.</p>
+           <p>Regarding share certificates: it is not mandatory to issue them. As stock certificates are documents of value, it may in many cases be suitable to waive issuance. A share register is, however, always drawn up.</p>`
+  },
+  q9: {
+    title: 'Guidance — Board Members',
+    body: `<p>A limited liability company shall have a board with one or more board members. Everyone on the board must be of legal age, free of bankruptcy and may not be under guardianship.</p>
+           <p>At least half of the board members must be resident within the European Economic Area (EEA).</p>
+           <p>In a board with more than one member, one of the board members shall be appointed <strong>Chairman</strong>. The Chairman shall organise the board's work and ensure the board fulfils its duties.</p>`
+  },
+  q10: {
+    title: 'Guidance — Deputy Board Members',
+    body: `<p>If the board is made up of one or two board members, a deputy board member shall be appointed.</p>
+           <p>Deputy board members must also be resident within the EEA (counted separately from board members).</p>`
+  },
+  q11: {
+    title: 'Guidance — Managing Director',
+    body: `<p>A Managing Director may be appointed in a private company, but it is not mandatory.</p>
+           <p>The Managing Director shall be of legal age, free of bankruptcy and may not be under guardianship. The Managing Director must also be resident within the EEA.</p>
+           <p>The Managing Director has the right to sign on behalf of the company for day-to-day administrative matters. This right is granted by law and cannot be restricted by the board.</p>`
+  },
+  q12: {
+    title: 'Guidance — Authorized Signatory',
+    body: `<p>The board represents the company and legally signs for it. The board may decide on authority to sign on behalf of the company for one or more board members, the Managing Director or other persons, either separately or jointly.</p>
+           <p>If a person outside the board shall have authority to sign, their name, date of birth and address shall be listed.</p>
+           <p>At least one signatory must be resident within the EEA.</p>`
+  },
+  q13: {
+    title: 'Guidance — Auditor',
+    body: `<p>A limited liability company may have at least one certified or qualified auditor. If you wish to have an accounting firm as auditor, both the accounting firm and the principally responsible auditor shall be named.</p>
+           <p><em>Note:</em> Small limited companies are exempted from the requirement of appointing an auditor. A small company has fewer than an average of 3 employees, a balance sheet total of less than SEK 1.5 million and net turnover of less than SEK 3 million.</p>
+           <p>One or more deputy auditors may also be appointed, but this is not mandatory.</p>`
+  }
 };
 
 async function init() {
@@ -166,7 +285,6 @@ function updateSidebar() {
   const qIds = Object.keys(flow.questions);
   const doneIds = history.map(q => q.id);
   const currentId = currentQ ? currentQ.id : null;
-
   sidebar.innerHTML = '<div class="sidebar-label">Questions</div>' +
     qIds.map(id => {
       const isDone = doneIds.includes(id);
@@ -210,21 +328,33 @@ function renderQuestion() {
     inputHtml = `<input type="text" id="mainInput" placeholder="${q.placeholder || ''}" value="${answers[q.field] || ''}" oninput="answers['${q.field}']=this.value" onkeydown="if(event.key==='Enter')nextQ()">`;
   }
 
+  // Build context panel
+  const ctx = CONTEXT[q.id];
+  const contextHtml = ctx
+    ? `<div class="context-panel">
+        <div class="context-title">&#9432; ${ctx.title}</div>
+        <div class="context-body">${ctx.body}</div>
+       </div>`
+    : `<div class="context-panel hidden"></div>`;
+
   main.innerHTML = `
     <div class="progress-wrap">
       <div class="progress-meta"><span>Question ${current} of ${total}</span><span>${pct}% complete</span></div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
     </div>
-    <div class="q-card">
-      <div class="q-number">Question ${current}</div>
-      <div class="q-label">${q.label}${isOptional ? '<span class="optional-badge">Optional</span>' : ''}</div>
-      ${hintHtml}
-      ${inputHtml}
-      <div id="errMsg"></div>
-      <div class="nav-buttons">
-        <button class="btn-ghost" onclick="${history.length > 0 ? 'prevQ()' : 'backToLanding()'}">&larr; Back</button>
-        <button class="btn-primary" onclick="nextQ()">${q.next === null ? 'Generate Document &rarr;' : 'Next &rarr;'}</button>
+    <div class="form-row">
+      <div class="q-card">
+        <div class="q-number">Question ${current}</div>
+        <div class="q-label">${q.label}${isOptional ? '<span class="optional-badge">Optional</span>' : ''}</div>
+        ${hintHtml}
+        ${inputHtml}
+        <div id="errMsg"></div>
+        <div class="nav-buttons">
+          <button class="btn-ghost" onclick="${history.length > 0 ? 'prevQ()' : 'backToLanding()'}">&larr; Back</button>
+          <button class="btn-primary" onclick="nextQ()">${q.next === null ? 'Generate Document &rarr;' : 'Next &rarr;'}</button>
+        </div>
       </div>
+      ${contextHtml}
     </div>`;
 
   const inp = document.getElementById('mainInput');
